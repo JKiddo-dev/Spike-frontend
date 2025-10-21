@@ -5,6 +5,8 @@ import L from "leaflet";
 import { getRoute } from "@/lib/api";
 import "leaflet/dist/leaflet.css";
 import TextInput from "./TextInput";
+import { supabase } from "@/lib/supabaseClient";
+
 
 
 // --- ICONOS ---
@@ -44,31 +46,57 @@ export default function MapContent() {
     return null;
   }
 
-  async function handleCalculate() {
-    if (points.length === 2) {
-      const start: [number, number] = [points[0][1], points[0][0]]; // [lng, lat]
-      const end: [number, number] = [points[1][1], points[1][0]];   // [lng, lat]
+  // --- Calcular ruta y guardar en Supabase ---
+async function handleCalculate() {
+  if (points.length === 2) {
+    const start: [number, number] = [points[0][1], points[0][0]]; // [lng, lat]
+    const end: [number, number] = [points[1][1], points[1][0]];   // [lng, lat]
 
-      try {
-        const data = await getRoute(start, end);
+    try {
+      console.log("📡 Solicitando ruta entre:", start, end);
+      const data = await getRoute(start, end);
 
-        if (!data || !data.geometry || !Array.isArray(data.geometry)) {
-          console.error("Ruta inválida", data);
-          return;
-        }
-
-        setDistance(data.distance_km);
-        setDuration(data.duration_min);
-
-        const coords: [number, number][] = data.geometry.map(
-          (coord: [number, number]) => [coord[1], coord[0]]
-        );
-        setRouteCoords(coords);
-      } catch (err) {
-        console.error("Error al calcular ruta:", err);
+      if (!data || !data.geometry || !Array.isArray(data.geometry)) {
+        console.error("❌ Ruta inválida o sin geometría:", data);
+        return;
       }
+
+      // Actualizar estado del mapa
+      setDistance(data.distance_km);
+      setDuration(data.duration_min);
+
+      // Convertir [lng, lat] → [lat, lng] para Leaflet
+      const coords: [number, number][] = data.geometry.map(
+        (coord: [number, number]) => [coord[1], coord[0]]
+      );
+      setRouteCoords(coords);
+
+      // 🔹 Guardar la ruta en Supabase
+      console.log("🧭 Guardando ruta en Supabase...");
+
+      const { data: insertedData, error } = await supabase.from("rutas").insert([
+        {
+          origen: points[0].join(", "),
+          destino: points[1].join(", "),
+          distancia_km: data.distance_km,
+          duracion_min: data.duration_min,
+        },
+      ]);
+
+      if (error) {
+        console.error("❌ Error al insertar en Supabase:", error.message);
+      } else {
+        console.log("✅ Ruta guardada correctamente en Supabase:", insertedData);
+      }
+
+    } catch (err: any) {
+      console.error("💥 Error al calcular o guardar ruta:", err.message);
     }
+  } else {
+    console.warn("⚠️ Se necesitan exactamente 2 puntos para calcular una ruta.");
   }
+}
+
 
   return (
   <div className="w-full flex flex-col items-center space-y-4">
@@ -123,4 +151,5 @@ export default function MapContent() {
     </div>
   </div>
 );
+
 }
