@@ -89,9 +89,13 @@ async function handleCalculate() {
         console.log("✅ Ruta guardada correctamente en Supabase:", insertedData);
       }
 
-    } catch (err: any) {
-      console.error("💥 Error al calcular o guardar ruta:", err.message);
-    }
+    } catch (err) {
+        if (err instanceof Error) {
+          console.error("💥 Error al calcular o guardar ruta:", err.message);
+      } else {
+          console.error("💥 Error desconocido:", err);
+  }
+}
   } else {
     console.warn("⚠️ Se necesitan exactamente 2 puntos para calcular una ruta.");
   }
