@@ -7,9 +7,6 @@ import "leaflet/dist/leaflet.css";
 import TextInput from "./TextInput";
 import { supabase } from "@/lib/supabaseClient";
 
-
-
-// --- ICONOS ---
 const DefaultIcon = L.icon({
   iconUrl: "/images/marker-icon.png",
   iconRetinaUrl: "/images/marker-icon-2x.png",
@@ -46,12 +43,11 @@ export default function MapContent() {
     return null;
   }
 
-  // --- Calcular ruta y guardar en Supabase ---
+  
 async function handleCalculate() {
   if (points.length === 2) {
-    const start: [number, number] = [points[0][1], points[0][0]]; // [lng, lat]
-    const end: [number, number] = [points[1][1], points[1][0]];   // [lng, lat]
-
+    const start: [number, number] = [points[0][1], points[0][0]]; 
+    const end: [number, number] = [points[1][1], points[1][0]];   
     try {
       console.log("📡 Solicitando ruta entre:", start, end);
       const data = await getRoute(start, end);
@@ -61,17 +57,17 @@ async function handleCalculate() {
         return;
       }
 
-      // Actualizar estado del mapa
+      
       setDistance(data.distance_km);
       setDuration(data.duration_min);
 
-      // Convertir [lng, lat] → [lat, lng] para Leaflet
+      
       const coords: [number, number][] = data.geometry.map(
         (coord: [number, number]) => [coord[1], coord[0]]
       );
       setRouteCoords(coords);
 
-      // 🔹 Guardar la ruta en Supabase
+      
       console.log("🧭 Guardando ruta en Supabase...");
 
       const { data: insertedData, error } = await supabase.from("rutas").insert([
@@ -107,7 +103,7 @@ async function handleCalculate() {
     {/* NUEVO: campos de búsqueda */}
     <TextInput
       onLocationsReady={(coords) => {
-        setPoints(coords.map(([lng, lat]) => [lat, lng])); // convertir para Leaflet
+        setPoints(coords.map(([lng, lat]) => [lat, lng])); 
         setDistance(null);
         setDuration(null);
         setRouteCoords([]);

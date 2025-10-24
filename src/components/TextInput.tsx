@@ -17,7 +17,7 @@ export default function LocationInputs({ onLocationsReady }: Props) {
     const res = await fetch(`${baseUrl}/route/geocode?place=${encodeURIComponent(place)}`);
     if (!res.ok) throw new Error(`Error al buscar "${place}"`);
     const data = await res.json();
-    return [data.lng, data.lat] as [number, number]; // formato [lng, lat]
+    return [data.lng, data.lat] as [number, number]; 
   }
 
   async function handleSubmit(e: React.FormEvent) {
